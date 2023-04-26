@@ -7,7 +7,10 @@
         .suggestion {
             cursor: pointer;
         }
-
+        .dot {
+        text-decoration: none; /* Убираем подчеркивание */
+        border-bottom: 1px dashed #000080; /* Добавляем свою линию */
+       }
         .word-block {
             display: inline-block;
             border: 1px solid #ccc;
@@ -26,6 +29,8 @@
                 <div id="txt_box_tranlate"></div>
                 <label for="input_word">Введите предложение</label>
                 <input type="text" class="form-control" id="input_word" name="input_word" required>
+                <br><button class="btn btn-secondary" onclick="translate_inmput()">Перевести предложение</button>
+                <p class="dot" ></p>
                 <div id="suggestion_box"></div>
             </div>
         </form>
@@ -109,7 +114,10 @@
                 }
             });
         }
+    translate_inmput(){
+    var  = document.getElementById("input_word").value;
 
+    }
 
 
         function getLastWord() {
