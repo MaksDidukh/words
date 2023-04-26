@@ -38,7 +38,7 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    file_path = 'data.txt'  # Путь к файлу с текстом
+    file_path = 'data_ru.txt'  # Путь к файлу с текстом
     input_word = request.form['input_word']
     words = load_text_file(file_path)
     predicted_words = predict_next_words(words, input_word)

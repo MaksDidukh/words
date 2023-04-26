@@ -116,7 +116,7 @@ function translate(text) {
                 body: JSON.stringify({
                     q: text,
                     source: "auto",
-                    target: "ru",
+                    target: "en",
                     format: "text"
                 }),
                 headers: { "Content-Type": "application/json" }
@@ -141,6 +141,7 @@ function translate(text) {
             var lastWord = words[words.length - 1];
             lastWord = lastWord.replace(/\.$/, '');
             return lastWord;
+            console.log(lastWord)
         }
 
         function appendSelectedWord(selectedWord) {
