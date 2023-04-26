@@ -7,10 +7,9 @@
         .suggestion {
             cursor: pointer;
         }
-        .dot {
-        text-decoration: none; /* Убираем подчеркивание */
-        border-bottom: 1px dashed #000080; /* Добавляем свою линию */
-       }
+        #translate_text {
+      border-bottom: 1px dashed #000;
+    }
         .word-block {
             display: inline-block;
             border: 1px solid #ccc;
@@ -29,15 +28,14 @@
                 <div id="txt_box_tranlate"></div>
                 <label for="input_word">Введите предложение</label>
                 <input type="text" class="form-control" id="input_word" name="input_word" required>
-                <br><button class="btn btn-secondary" onclick="translate_inmput()">Перевести предложение</button>
-                <p class="dot" ></p>
+                <br><div class="btn btn-secondary" onclick="translate_inmput()">Перевести предложение</div><br><br>
+                <p id="translate_text" ></p>
                 <div id="suggestion_box"></div>
             </div>
         </form>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-
         function sleep(ms) {
           const start = new Date().getTime();
           while (new Date().getTime() - start < ms) {}
@@ -97,6 +95,17 @@
                     }
                 });
             }
+        }
+        function translate_inmput() {
+            var text = document.getElementById('input_word');
+            var outText = document.getElementById('translate_text');
+            outText.innerHTML = "";
+            translate(text.value).then(function ({ text, translatedText }) {
+                outText.innerHTML = translatedText;
+                console.log(translatedText)
+            })
+
+            document.getElementById(translate_text)
         }
         // Функция для перевода текста
 function translate(text) {

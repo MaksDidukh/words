@@ -1,20 +1,13 @@
- 
-import requests
+from libretranslatepy import LibreTranslateAPI
 import time
+
+# Создание экземпляра класса LibreTranslateAPI
+translator = LibreTranslateAPI()
 
 # Функция для перевода текста
 def translate_text(text):
-    url = "http://94.231.205.187:5000/translate"
-    payload = {
-        "q": text,
-        "source": "auto",
-        "target": "ru",
-        "format": "text",
-        "api_key": ""
-    }
-    response = requests.post(url, json=payload)
-    result = response.json()
-    return result["result"]
+    result = translator.translate(text, target="ru")
+    return result.text
 
 # Открытие исходного файла и создание файла для записи переводов
 with open("data.txt", "r", encoding="utf-8") as file:
@@ -26,6 +19,7 @@ with open("data.txt", "r", encoding="utf-8") as file:
             for word in words:
                 # Перевод каждого слова
                 translated_word = translate_text(word)
+                print(f"{word}: {translated_word}\n")
                 # Запись слова и его перевода в отдельный файл
                 output_file.write(f"{word}: {translated_word}\n")
                 # Задержка в 500 миллисекунд
