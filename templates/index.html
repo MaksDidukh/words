@@ -44,6 +44,12 @@
         }
 
 
+        function pprint(obj) {
+            const jsonString = JSON.stringify(obj, null, 2);
+                console.log(jsonString);
+        }
+
+
         $(document).ready(function() {
             $('#input_word').on('input', function() {
                 chek_text();
@@ -93,34 +99,34 @@
             }
         }
         // Функция для перевода текста
-        function translate(text) {
-            return new Promise(async (resolve, reject) => {
-                try {
-                    const res = await fetch("http://94.231.205.187:5000/translate", {
-                        method: "POST",
-                        body: JSON.stringify({
-                            q: text,
-                            source: "auto",
-                            target: "ru",
-                            format: "text"
-                        }),
-                        headers: { "Content-Type": "application/json" }
-                    });
-                    const result = await res.json();
-                    const translatedText = result.translatedText;
-                    resolve({ text, translatedText });
-                } catch (error) {
-                    reject(error);
-                }
+function translate(text) {
+    return new Promise(function (resolve, reject) {
+        try {
+            const res = fetch("http://94.231.205.187:5000/translate", {
+                method: "POST",
+                body: JSON.stringify({
+                    q: text,
+                    source: "auto",
+                    target: "ru",
+                    format: "text"
+                }),
+                headers: { "Content-Type": "application/json" }
             });
+            res.then(function (response) {
+                return response.json();
+            }).then(function (result) {
+                const translatedText = result.translatedText;
+                resolve({ text, translatedText });
+            }).catch(function (error) {
+                reject(error);
+            });
+        } catch (error) {
+            reject(error);
         }
-    translate_inmput(){
-    var  = document.getElementById("input_word").value;
+    });
+}
 
-    }
-
-
-        function getLastWord() {
+    function getLastWord() {
             var inputWordElement = document.getElementById("input_word");
             var words =  inputWordElement.value.trim().split(/\s+/);
             var lastWord = words[words.length - 1];
@@ -134,7 +140,7 @@
             if (inputVal.endsWith(' ')) {
                 inputWordElement.value = inputWordElement.value + selectedWord + " ";
             } else {
-                inputWordElement.value = inputWordElement.value + " " + selectedWord;
+                inputWordElement.value = inputWordElement.value + " " + selectedWord + " ";
             }
         }
 
@@ -156,66 +162,43 @@ function chek_text(){
 
 
     function highlightWords() {
-      // Получаем введенный текст из input
-      const inputText = document.getElementById('input_word').value;
+            var arrText = []
+            var arrTextTranslate = []
+            var arrWord = []
+            const inputVal = document.getElementById('input_word').value;
+            if (inputVal.endsWith(' ')) {
+                const words = inputVal.split(' ');
+                // Получаем введенный текст из input
+                var suggestionBox = $('#txt_box');
+                var suggestionBoxT = $('#txt_box_tranlate')
 
-      // Разделяем текст на слова
-      const words = inputText.split(' ');
-      var suggestionBox = $('#txt_box');
+                // Очищаем контейнер с предыдущими результатами
+                suggestionBox.empty();
+                suggestionBoxT.empty();
 
-      
-      // Очищаем контейнер с предыдущими результатами
-      $("#txt_box").empty();
-      // Создаем и добавляем блок для каждого слова
-      words.forEach(word => {
-        const wordBlock = document.createElement('div');
-        wordBlock.textContent = word;
-        if (word != "" && word != " ") {
-            suggestionBox.append('<div class="btn btn-warning">' + word + '</div>');// английский текст 
-                            seeTextInput();
-        }
-        })
-    }
+                // Используем цикл for для обработки каждого слова
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    if (word != "" && word != " ") {
+                        suggestionBox.append('<div class="btn btn-warning">' + word + '</div>'); // английский текст 
+                        translate(word).then(function ({ text, translatedText }) {
+                            arrText.push(text)
+                            arrTextTranslate.push(translatedText)
+                            console.log("ru " + arrText)
 
+                            // Сравниваем word с arrText
+                            if (words[i] === text) {
+                                console.log("Word "+    word+ " out text "+ arrText + " translate " +arrTextTranslate)
+                                suggestionBoxT.append('<div class="btn btn-success">' + arrTextTranslate[i] + '</div>');
 
-async function seeTextInput() {
-  // Найти все элементы с классом "btn" и "btn-warning"
-  var btns = $('.btn.btn-warning');
-  var suggestionBoxT = $('#txt_box_tranlate');
-  suggestionBoxT.empty();
-  var arrText = []
-  var arrTranslate = []
-  var arrWord = []
-  // Пройтись по найденным элементам с использованием цикла for
-  for (var i = 0; i < btns.length; i++) {
-    var btn = $(btns[i]);
-    arrWord.push(btn.text());
-    var word = btn.text();
-    // Используем await для ожидания завершения операции translate
-    var { text, translatedText } = await translate(word);
-    arrText.push(text);
-    arrTranslate.push(translatedText);
-    console.log('dsf');
-  }
-
-  for (let j = 0;j < arrText.length;j++) {
-    console.log('ru  ' + arrText[j] + '  en  ' + arrTranslate[j]);
-  }
-    for (var i = 0; i < arrWord.length; i++) {
-    if (arrWord[i] == arrText[i]) {
-        suggestionBoxT.append('<div class="btn btn-success">' + arrTranslate[i] + '</div>'); 
-    }
-}
-    arrText = [];
-    arrTranslate = [];
-    arrWord = [];
+                                
+                            }
+                        })
+                    }
+                }
+            }
 
 }
-
-//suggestionBoxT.append('<div class="btn btn-success">' + translatedText + '</div>'); 
-
-
-
 
 
 
