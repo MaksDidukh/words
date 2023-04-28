@@ -35,7 +35,9 @@ def predict_next_words(words, input_word):
 @app.route('/')
 def index():
     return render_template('index.html')
-
+@app.route('/test')
+def test():
+    return render_template('test.html')
 @app.route('/predict', methods=['POST'])
 def predict():
     file_path = 'data_ru.txt'  # Путь к файлу с текстом

@@ -30,194 +30,172 @@
                 <input type="text" class="form-control" id="input_word" name="input_word" required>
                 <br><div class="btn btn-secondary" onclick="translate_inmput()">Перевести предложение</div><br><br>
                 <p id="translate_text" ></p>
-                <div id="suggestion_box"></div>
+                <div id="get_new_word"></div>
             </div>
         </form>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        function sleep(ms) {
-          const start = new Date().getTime();
-          while (new Date().getTime() - start < ms) {}
-        }
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function sleep(ms) {
+        const start = new Date().getTime();
+        while (new Date().getTime() - start < ms) {}
+    }
 
+    function pprint(obj) {
+        const jsonString = JSON.stringify(obj, null, 2);
+        console.log(jsonString);
+    }
+    $(document).ready(function() {
+        $('#input_word').on('input', function() {
+            chek_text();
+            highlightWords();
+            var inputWord = getLastWord();
+            if (inputWord.length >= 1) {
+                makePrediction(inputWord);
+            } else {
+                clearSuggestions();
+            }
+        });
+    });
+    $(document).on('click', '.suggestion', function() {
+        var selectedWord = $(this).text();
+        chek_text();
+        appendSelectedWord(selectedWord);
+        clearSuggestions();
+        makePrediction(getLastWord());
+        highlightWords();
+    });
+    var isRequestSent = false;
 
-        function pprint(obj) {
-            const jsonString = JSON.stringify(obj, null, 2);
-                console.log(jsonString);
-        }
-
-
-        $(document).ready(function() {
-            $('#input_word').on('input', function() {
-                chek_text();
-                highlightWords();
-                var inputWord = getLastWord();
-                if (inputWord.length >= 1) {
-                    makePrediction(inputWord);
-                } else {
-                    clearSuggestions();
+    function makePrediction(inputWord) {
+        if (!isRequestSent) {
+            isRequestSent = true;
+            $.ajax({
+                url: '/predict',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    input_word: inputWord
+                },
+                success: function(data) {
+                    var suggestionBox = $('#get_new_word');
+                    suggestionBox.empty();
+                    if (data.predicted_words.length > 0) {
+                        data.predicted_words.forEach(function(word) {
+                            suggestionBox.append('<div class="suggestion btn btn-light">' + word + '</div>');
+                        });
+                    } else {
+                        makePrediction(' ');
+                    }
+                },
+                complete: function() {
+                    isRequestSent = false;
                 }
             });
-
-            $(document).on('click', '.suggestion', function() {
-                var selectedWord = $(this).text();
-                appendSelectedWord(selectedWord);
-                clearSuggestions();
-                makePrediction(getLastWord());
-                highlightWords();
-            });
-        });
-
-        var isRequestSent = false;
-
-        function makePrediction(inputWord) {
-            if (!isRequestSent) {
-                isRequestSent = true;
-                $.ajax({
-                    url: '/predict',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {input_word: inputWord},
-                    success: function(data) {
-                        var suggestionBox = $('#suggestion_box');
-                        suggestionBox.empty();
-                        if (data.predicted_words.length > 0) {
-                            data.predicted_words.forEach(function(word) {
-                                suggestionBox.append('<div class="suggestion btn btn-light">' + word + '</div>');
-                            });
-                        } else {
-                            makePrediction(' ');
-                        }
-                    },
-                    complete: function() {
-                        isRequestSent = false;
-                    }
-                });
-            }
         }
-        function translate_inmput() {
-            var text = document.getElementById('input_word');
-            var outText = document.getElementById('translate_text');
-            outText.innerHTML = "";
-            translate(text.value).then(function ({ text, translatedText }) {
-                outText.innerHTML = translatedText;
-                console.log(translatedText)
-            })
+    }
 
-            document.getElementById(translate_text)
-        }
-        // Функция для перевода текста
-function translate(text) {
-    return new Promise(function (resolve, reject) {
+    function translate_inmput() {
+        var text = document.getElementById('input_word');
+        var outText = document.getElementById('translate_text');
+        var translate_all = await translate(text);
+        outText.innerHTML = translate_all
+    }
+    // Функция для перевода текста
+    async function translate(text) {
         try {
-            const res = fetch("http://94.231.205.187:5000/translate", {
+            const response = await fetch("http://94.231.205.187:5000/translate", {
                 method: "POST",
                 body: JSON.stringify({
                     q: text,
-                    source: "auto",
+                    source: "ru",
                     target: "en",
                     format: "text"
                 }),
-                headers: { "Content-Type": "application/json" }
+                headers: {
+                    "Content-Type": "application/json"
+                }
             });
-            res.then(function (response) {
-                return response.json();
-            }).then(function (result) {
-                const translatedText = result.translatedText;
-                resolve({ text, translatedText });
-            }).catch(function (error) {
-                reject(error);
-            });
+            const result = await response.json();
+            return result.translatedText;
         } catch (error) {
-            reject(error);
+            console.log(error);
         }
-    });
-}
+    }
 
     function getLastWord() {
-            var inputWordElement = document.getElementById("input_word");
-            var words =  inputWordElement.value.trim().split(/\s+/);
-            var lastWord = words[words.length - 1];
-            lastWord = lastWord.replace(/\.$/, '');
-            return lastWord;
-            console.log(lastWord)
+        var inputWordElement = document.getElementById("input_word");
+        var words = inputWordElement.value.trim().split(/\s+/);
+        var lastWord = words[words.length - 1];
+        lastWord = lastWord.replace(/\.$/, '');
+        return lastWord;
+        console.log(lastWord)
+    }
+
+    function appendSelectedWord(selectedWord) {
+        var inputWordElement = document.getElementById("input_word");
+        const inputVal = document.getElementById('input_word').value;
+        if (inputVal.endsWith(' ')) {
+            inputWordElement.value = inputWordElement.value + selectedWord + " ";
+        } else {
+            inputWordElement.value = inputWordElement.value + " " + selectedWord + " ";
         }
+    }
 
-        function appendSelectedWord(selectedWord) {
-            var inputWordElement = document.getElementById("input_word");
-            const inputVal = document.getElementById('input_word').value;
-            if (inputVal.endsWith(' ')) {
-                inputWordElement.value = inputWordElement.value + selectedWord + " ";
-            } else {
-                inputWordElement.value = inputWordElement.value + " " + selectedWord + " ";
-            }
-        }
+    function clearSuggestions() {
+        $('#get_new_word').empty();
+    }
 
-        function clearSuggestions() {
-            $('#suggestion_box').empty();
-        }
+    function chek_text() {
+        const inputVal = document.getElementById('input_word').value;
+        // Замена множественных пробелов на один пробел, оставляя только последний пробел
+        const cleanedVal = inputVal.replace(/\s+/g, ' ');
+        // Установка очищенного значения обратно в input
+        document.getElementById('input_word').value = cleanedVal;
+    }
 
-
-function chek_text(){
-    const inputVal = document.getElementById('input_word').value;
-    // Замена множественных пробелов на один пробел, оставляя только последний пробел
-    const cleanedVal = inputVal.replace(/\s+/g, ' ');
-
-    // Установка очищенного значения обратно в input
-    document.getElementById('input_word').value = cleanedVal;
-
-
-}
-
-
-    function highlightWords() {
-            var arrText = []
-            var arrTextTranslate = []
-            var arrWord = []
-            const inputVal = document.getElementById('input_word').value;
-            if (inputVal.endsWith(' ')) {
-                const words = inputVal.split(' ');
-                // Получаем введенный текст из input
-                var suggestionBox = $('#txt_box');
-                var suggestionBoxT = $('#txt_box_tranlate')
-
-                // Очищаем контейнер с предыдущими результатами
-                suggestionBox.empty();
-                suggestionBoxT.empty();
-
-                // Используем цикл for для обработки каждого слова
-                for (let i = 0; i < words.length; i++) {
-                    const word = words[i];
-                    if (word != "" && word != " ") {
-                        suggestionBox.append('<div class="btn btn-warning">' + word + '</div>'); // английский текст 
-                        translate(word).then(function ({ text, translatedText }) {
-                            arrText.push(text)
-                            arrTextTranslate.push(translatedText)
-                            console.log("ru " + arrText)
-
-                            // Сравниваем word с arrText
-                            if (words[i] === text) {
-                                console.log("Word "+    word+ " out text "+ arrText + " translate " +arrTextTranslate)
-                                suggestionBoxT.append('<div class="btn btn-success">' + arrTextTranslate[i] + '</div>');
-
-                                
-                            }
-                        })
-                    }
+    async function highlightWords() {
+        const inputVal = document.getElementById('input_word').value;
+        if (inputVal.endsWith(' ')) {
+            const words = inputVal.split(' ');
+            // Получаем введенный текст из input
+            var suggestionBox = $('#txt_box');
+            // Очищаем контейнер с предыдущими результатами
+            suggestionBox.empty();
+            // Используем цикл for для обработки каждого слова
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                if (word !== "" && word !== " ") {
+                    suggestionBox.append('<div class="btn btn-warning">' + word + '</div>'); //  текст
                 }
             }
+            await tr()
+        }
+    }
+    async function tr() {
+        const textInput = document.getElementById('input_word');
+        var suggestionBoxT = $('#txt_box_tranlate')
+        const text = textInput.value;
+        suggestionBoxT.empty();
+        // Проверяем, содержит ли поле ввода текст
+        if (text.trim() === "" && text.trim() === " ") {
+            alert("Введите текст для перевода");
+            return;
+        }
+        const words = text.split(" ");
+        suggestionBoxT.innerHTML = "";
+          for (let i = 0; i < words.length -    1; i++) {
+                const word = words[i];
+                const translatedWord = await translate(word);
+                suggestionBoxT.append('<div class="btn btn-warning">' + `${translatedWord}` + '</div>');
+  }
 
 }
 
 
 
 
-
-
-
-
-    </script>
+</script>
 </body>
 </html>
 
