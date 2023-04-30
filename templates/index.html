@@ -30,7 +30,6 @@
                 <div id="txt_box_tranlate"></div>
 
                 <label for="input_word">Введите предложение</label>
-
                 <input type="text" class="form-control" id="input_word" name="input_word" required>
 
                 <br><div class="btn btn-secondary" id = 'translate_all' >Перевести предложение</div>
@@ -82,11 +81,7 @@ function get_first_word(){
             check_text();
             highlightWords();
             var inputWord = getLastWord();
-            if (inputWord.length >= 1) {
-                await makePrediction(inputWord);
-            } else {
-                clearSuggestions();
-            }
+            await makePrediction(inputWord.trim());
             if ($('#input_word').val().endsWith(' ')) {
   tr();}
         });
@@ -122,7 +117,7 @@ $(document).on('click', '#translate_all', function() {
         if (!isRequestSent) {
             isRequestSent = true;
             $.ajax({
-                url: '/predict',
+                url: '/ru_en',
                 type: 'POST',
                 dataType: 'json',
                 data: {
@@ -173,8 +168,8 @@ $(document).on('click', '#translate_all', function() {
         var words = inputWordElement.value.trim().split(/\s+/);
         var lastWord = words[words.length - 1];
         lastWord = lastWord.replace(/\.$/, '');
-        return lastWord;
         console.log(lastWord)
+        return lastWord;
     }
 
     function appendSelectedWord(selectedWord) {
@@ -225,7 +220,7 @@ async function check_text() {
         }
     }
     async function tr() {
-        sleep(500)
+        sleep(200)
         const textInput = document.getElementById('input_word');
         var suggestionBoxT = $('#txt_box_tranlate')
         const text = textInput.value;
