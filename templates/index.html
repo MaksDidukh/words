@@ -220,7 +220,6 @@ async function check_text() {
         }
     }
     async function tr() {
-        sleep(200)
         const textInput = document.getElementById('input_word');
         var suggestionBoxT = $('#txt_box_tranlate')
         const text = textInput.value;
@@ -233,11 +232,12 @@ async function check_text() {
         const words = text.split(" ");
         suggestionBoxT.innerHTML = "";
           for (let i = 0; i < words.length - 1; i++) {
-
                 const word = words[i];
+            if (word != "" && word !== " ") {
+                console.log(word)
                 const translatedWord = await translate(word);
                 if (translatedWord !== undefined) { suggestionBoxT.append('<div class="btn btn-primary">' + `${translatedWord}` + '</div>');      }
-
+    }
   }
     suggestionBoxT.append('<div class="btn btn-info go_again" onclick="tr()">Ещё раз!</div>')
 }
