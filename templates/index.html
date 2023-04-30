@@ -21,22 +21,54 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-3">Перевод предложений</h1>
+        <h1 class="mb-2">Перевод слов</h1>
         <form>
             <div class="form-group">
+
                 <div id="txt_box"></div><br>
+
                 <div id="txt_box_tranlate"></div>
+
                 <label for="input_word">Введите предложение</label>
+
                 <input type="text" class="form-control" id="input_word" name="input_word" required>
-                <br><div class="btn btn-secondary" onclick="translate_inmput()">Перевести предложение</div><br><br>
+
+                <br><div class="btn btn-secondary" id = 'translate_all' >Перевести предложение</div>
+                                <div class="btn btn-secondary" id = 'add_word' >Получить слова</div>
+                                <br><br>
+
+
                 <p id="translate_text" ></p>
+
                 <div id="get_new_word"></div>
+
             </div>
         </form>
     </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    function sleep(ms) {
+document.addEventListener('DOMContentLoaded', function() {get_first_word()});
+$(document).on('click', '#add_word', async function() {get_first_word()});
+
+
+
+function get_first_word(){
+   var suggestionBox = $('#get_new_word');
+       suggestionBox.empty();
+      $.ajax({
+        url: '/get_words',
+        type: 'POST',
+        dataType: 'json',
+        success: function(data) {
+            for (var i =0; i < data.predicted_words.length; i++){
+            suggestionBox.append('<div class="suggestion btn btn-light">' + data.predicted_words[i] + '</div>');
+             }
+
+        }
+    });
+    }
+
+    async function sleep(ms) {
         const start = new Date().getTime();
         while (new Date().getTime() - start < ms) {}
     }
@@ -45,29 +77,48 @@
         const jsonString = JSON.stringify(obj, null, 2);
         console.log(jsonString);
     }
-    $(document).ready(function() {
-        $('#input_word').on('input', function() {
-            chek_text();
+// Отслеживение изменения input
+    $('#input_word').on('input', async function() {
+            check_text();
             highlightWords();
             var inputWord = getLastWord();
             if (inputWord.length >= 1) {
-                makePrediction(inputWord);
+                await makePrediction(inputWord);
             } else {
                 clearSuggestions();
             }
+            if ($('#input_word').val().endsWith(' ')) {
+  tr();}
         });
-    });
-    $(document).on('click', '.suggestion', function() {
+
+// Отслеживание нажатия на предложенное слово
+    $(document).on('click', '.suggestion', async function() {
         var selectedWord = $(this).text();
-        chek_text();
+
         appendSelectedWord(selectedWord);
         clearSuggestions();
         makePrediction(getLastWord());
         highlightWords();
+        tr()
+        check_text();
     });
-    var isRequestSent = false;
 
-    function makePrediction(inputWord) {
+    // Отслеживание нажатия на предложенное слово
+$(document).on('click', '#translate_all', function() {
+  get_elem_plase = document.getElementById('translate_text')
+  get_elem_text = document.getElementById('input_word')
+  get_elem_plase.value = ""
+  textPromise = translate(get_elem_text.value)
+  console.log(textPromise)
+  textPromise.then(text => {
+    console.log(text)
+    get_elem_plase.innerHTML = text
+  })
+});
+
+    var isRequestSent = false;
+// Функция предлагает новые слова
+   async function makePrediction(inputWord) {
         if (!isRequestSent) {
             isRequestSent = true;
             $.ajax({
@@ -84,8 +135,6 @@
                         data.predicted_words.forEach(function(word) {
                             suggestionBox.append('<div class="suggestion btn btn-light">' + word + '</div>');
                         });
-                    } else {
-                        makePrediction(' ');
                     }
                 },
                 complete: function() {
@@ -95,12 +144,6 @@
         }
     }
 
-    function translate_inmput() {
-        var text = document.getElementById('input_word');
-        var outText = document.getElementById('translate_text');
-        var translate_all = await translate(text);
-        outText.innerHTML = translate_all
-    }
     // Функция для перевода текста
     async function translate(text) {
         try {
@@ -122,6 +165,8 @@
             console.log(error);
         }
     }
+
+
 
     function getLastWord() {
         var inputWordElement = document.getElementById("input_word");
@@ -146,13 +191,20 @@
         $('#get_new_word').empty();
     }
 
-    function chek_text() {
-        const inputVal = document.getElementById('input_word').value;
-        // Замена множественных пробелов на один пробел, оставляя только последний пробел
-        const cleanedVal = inputVal.replace(/\s+/g, ' ');
-        // Установка очищенного значения обратно в input
-        document.getElementById('input_word').value = cleanedVal;
-    }
+async function check_text() {
+  const inputVal = document.getElementById('input_word').value;
+  // Замена множественных пробелов на один пробел, оставляя только последний пробел
+  const normalizedVal = inputVal.replace(/\s+/g, ' ');
+  // Добавление пробела после знаков препинания в конце строки, если они есть
+  const lastChar = normalizedVal[normalizedVal.length - 1];
+  if (lastChar === '-' || lastChar === ',' || lastChar === '.' || lastChar === '?' || lastChar === '!') {
+    document.getElementById('input_word').value = normalizedVal + ' ';
+  } else {
+    // Установка очищенного значения обратно в input
+    document.getElementById('input_word').value = normalizedVal;
+  }
+}
+
 
     async function highlightWords() {
         const inputVal = document.getElementById('input_word').value;
@@ -169,10 +221,11 @@
                     suggestionBox.append('<div class="btn btn-warning">' + word + '</div>'); //  текст
                 }
             }
-            await tr()
+            
         }
     }
     async function tr() {
+        sleep(500)
         const textInput = document.getElementById('input_word');
         var suggestionBoxT = $('#txt_box_tranlate')
         const text = textInput.value;
@@ -181,17 +234,19 @@
         if (text.trim() === "" && text.trim() === " ") {
             alert("Введите текст для перевода");
             return;
-        }
+        }else{
         const words = text.split(" ");
         suggestionBoxT.innerHTML = "";
-          for (let i = 0; i < words.length -    1; i++) {
+          for (let i = 0; i < words.length - 1; i++) {
+
                 const word = words[i];
                 const translatedWord = await translate(word);
-                suggestionBoxT.append('<div class="btn btn-warning">' + `${translatedWord}` + '</div>');
+                if (translatedWord !== undefined) { suggestionBoxT.append('<div class="btn btn-primary">' + `${translatedWord}` + '</div>');      }
+
   }
-
+    suggestionBoxT.append('<div class="btn btn-info go_again" onclick="tr()">Ещё раз!</div>')
 }
-
+}
 
 
 
