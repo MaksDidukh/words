@@ -32,7 +32,6 @@
                   <option value="en">en</option>
                   <option value="pl">pl</option>
                   <option value="de">de</option>
-                  <option value="es">es</option>
                 </select>
             на
                 <select class="form-select" aria-label="Default select example" id="to">
@@ -40,7 +39,6 @@
                   <option value="ru">ru</option>
                   <option value="pl">pl</option>
                   <option value="de">de</option>
-                  <option value="es">es</option>
                 </select>
                 <div id="txt_box"></div><br>
 
@@ -72,7 +70,7 @@ function get_first_word(){
    var suggestionBox = $('#get_new_word');
        suggestionBox.empty();
       $.ajax({
-        url: '/get_words',
+        url: `/get_words_${document.getElementById("from").value}`,
         type: 'POST',
         dataType: 'json',
         success: function(data) {
@@ -134,7 +132,7 @@ $(document).on('click', '#translate_all', function() {
         if (!isRequestSent) {
             isRequestSent = true;
             $.ajax({
-                url: '/ru',
+                url: `/${document.getElementById("from").value}`,
                 type: 'POST',
                 dataType: 'json',
                 data: {
