@@ -19,7 +19,7 @@ def index():
 @app.route('/test')
 def test():
     return render_template('test.html')
-@app.route('/ru_en', methods=['POST'])
+@app.route('/ru', methods=['POST'])
 def predict():
     file_path = 'data_ru.txt'  # Путь к файлу с текстом
     input_word = request.form['input_word']
